@@ -29,18 +29,22 @@ The changes/enhancements include:
 
 
 Comparison of between-marker substitution in original plugin and this version:
+
   Original:
-    The start marker token needed to be similar to: 
-      <ac:structured-macro ac:name="jenkins-between"><ac:parameter ac:name="id">MY_START_TOKEN</ac:parameter><ac:parameter ac:name="atlassian-macro-output-type"></ac:parameter><ac:rich-text-body>
-    The end marker token needed to be similar to:
-      </ac:rich-text-body></ac:structured-macro>
+  The start marker token needed to be similar to: 
+      \<ac:structured-macro ac:name="jenkins-between">\<ac:parameter ac:name="id">MY_START_TOKEN\</ac:parameter>\<ac:parameter ac:name="atlassian-macro-output-type">\</ac:parameter>\<ac:rich-text-body>
+      
+  The end marker token needed to be similar to:
+      \</ac:rich-text-body>\</ac:structured-macro>
   
-    The only way to find the above is to view the storage format for the page which is painful on the eyes. 
+  The only way to find the above is to view the storage format for the page which is painful on the eyes. 
 
   Current:
-    The start marker token is the id of macro in the page: 
-      MY_START_TOKEN
-    The end marker token is not needed.
+  
+  The start marker token is the id of macro in the page: 
+    MY_START_TOKEN
+  
+  The end marker token is not needed.
   
   My implementation assumes the macro is named "jenkins-between" per the instructions 
   at https://wiki.jenkins-ci.org/display/JENKINS/Confluence+Publisher+Plugin.
