@@ -13,8 +13,13 @@
  */
 package com.myyearbook.hudson.plugins.confluence.wiki.editors;
 
+import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import hudson.Extension;
 import hudson.Util;
+import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -28,6 +33,8 @@ import com.myyearbook.hudson.plugins.confluence.wiki.generators.MarkupGenerator;
  * @author Joe Hansche <jhansche@myyearbook.com>
  */
 public class BetweenTokensEditor extends MarkupEditor {
+    private final static String V4_MACRO_BLOCK = "<ac:structured-macro ac:name=\"jenkins-between\"><ac:parameter ac:name=\"id\">%s</ac:parameter><ac:parameter ac:name=\"atlassian-macro-output-type\">\\w+</ac:parameter><ac:rich-text-body>(.*?)</ac:rich-text-body></ac:structured-macro>";
+
     public final String startMarkerToken;
     public final String endMarkerToken;
 
@@ -47,38 +54,30 @@ public class BetweenTokensEditor extends MarkupEditor {
      * @param content
      * @param generated
      * @throws TokenNotFoundException
+     * @throws InterruptedException 
+     * @throws IOException 
      */
     @Override
-    public String performEdits(final BuildListener listener, final String content,
-            final String generated, final boolean isNewFormat) throws TokenNotFoundException {
+    public String performEdits(final AbstractBuild<?, ?> build, final BuildListener listener, final String content,
+            final String generated, final boolean isNewFormat) throws TokenNotFoundException, IOException, InterruptedException {
         final StringBuffer sb = new StringBuffer(content);
+        final String expandedStartMarkerToken = build.getEnvironment(listener).expand(startMarkerToken);
 
-        final int markerStart = content.indexOf(startMarkerToken);
-        final int contentStart = markerStart + startMarkerToken.length();
+        final String macro = String.format(V4_MACRO_BLOCK, expandedStartMarkerToken);
+        final Pattern p = Pattern.compile(".*(" + macro + ").*?");
+        final Matcher m = p.matcher(content);
 
-        if (markerStart < 0) {
-            throw new TokenNotFoundException(
-                    "Start-marker token could not be found in the page content: "
-                            + startMarkerToken);
+        if (!m.matches()) {
+            throw new TokenNotFoundException("between-marker token could not be found in the page content: "
+                    + expandedStartMarkerToken);
         }
 
-        final int end = content.indexOf(endMarkerToken, contentStart);
-
-        if (end < 0) {
-            throw new TokenNotFoundException(
-                    "End-marker token could not be found after the start-marker token: " + endMarkerToken);
+        // There should be 2 matches: one for the entire 'between' macro and a match within that one
+        // for what we're replacing
+        if (m.groupCount() >= 2) {
+            sb.replace(m.start(2), m.end(2), generated);
         }
-
-        // Remove the entire marked section (exclusive)
-        sb.delete(contentStart, end);
-
-        // Then insert the new content:
-        if (isNewFormat) {
-            sb.insert(contentStart, generated);
-        } else {
-            // Surround in newlines
-            sb.insert(contentStart, '\n').insert(contentStart, generated).insert(contentStart, '\n');
-        }
+        
         return sb.toString();
     }
 

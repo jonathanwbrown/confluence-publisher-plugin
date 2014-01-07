@@ -1,5 +1,6 @@
 package com.myyearbook.hudson.plugins.confluence.wiki.editors;
 
+import hudson.model.Build;
 import hudson.model.BuildListener;
 import junit.framework.TestCase;
 
@@ -20,6 +21,8 @@ public class BetweenTokensEditorTest extends TestCase {
     private static final String START_TOKEN = "%start%";
     private static final String END_TOKEN = "%end%";
 
+    @Mock
+    Build<?, ?> build;
     @Mock
     BuildListener buildListener;
     @Mock
@@ -51,9 +54,9 @@ public class BetweenTokensEditorTest extends TestCase {
         BetweenTokensEditor obj = new BetweenTokensEditor(markupGenerator, START_TOKEN, END_TOKEN);
 
         try {
-            obj.performEdits(buildListener, testContent, toInsert, false);
+            obj.performEdits(build, buildListener, testContent, toInsert, false);
             fail("Expected TokenNotFoundException");
-        } catch (TokenNotFoundException exc) {
+        } catch (Exception exc) {
             assertTrue(exc.getMessage().startsWith(expectedMessage));
         }
     }
@@ -72,9 +75,9 @@ public class BetweenTokensEditorTest extends TestCase {
         BetweenTokensEditor obj = new BetweenTokensEditor(markupGenerator, START_TOKEN, END_TOKEN);
 
         try {
-            obj.performEdits(buildListener, testContent, toInsert, false);
+            obj.performEdits(build, buildListener, testContent, toInsert, false);
             fail("Expected TokenNotFoundException");
-        } catch (TokenNotFoundException exc) {
+        } catch (Exception exc) {
             assertTrue(exc.getMessage().startsWith(expectedMessage));
         }
     }
@@ -86,17 +89,17 @@ public class BetweenTokensEditorTest extends TestCase {
      * @throws TokenNotFoundException
      */
     @Bug(13896)
-    public void testPerformEdits_multipleMarkers() throws TokenNotFoundException {
+    public void testPerformEdits_multipleMarkers() throws Exception {
         String testContent = "%start1%First Section.%end%\n%start%Second Section.%end%";
         String toInsert = "First replacement";
 
         BetweenTokensEditor obj1 = new BetweenTokensEditor(markupGenerator, "%start1%", END_TOKEN);
-        String actual = obj1.performEdits(buildListener, testContent, toInsert, true);
+        String actual = obj1.performEdits(build, buildListener, testContent, toInsert, true);
         assertEquals("%start1%First replacement%end%\n%start%Second Section.%end%", actual);
 
         toInsert = "Second replacement";
         BetweenTokensEditor obj2 = new BetweenTokensEditor(markupGenerator, START_TOKEN, END_TOKEN);
-        actual = obj2.performEdits(buildListener, actual, toInsert, true);
+        actual = obj2.performEdits(build, buildListener, actual, toInsert, true);
         assertEquals("%start1%First replacement%end%\n%start%Second replacement%end%", actual);
     }
 
@@ -105,12 +108,12 @@ public class BetweenTokensEditorTest extends TestCase {
      *
      * @throws TokenNotFoundException
      */
-    public void testPerformEdits_oldFormat() throws TokenNotFoundException {
+    public void testPerformEdits_oldFormat() throws Exception {
         String testContent = "Header\n%start%Current Content%end%\nFooter";
         String toInsert = "Replacement content";
 
         BetweenTokensEditor obj = new BetweenTokensEditor(markupGenerator, START_TOKEN, END_TOKEN);
-        String actual = obj.performEdits(buildListener, testContent, toInsert, false);
+        String actual = obj.performEdits(build, buildListener, testContent, toInsert, false);
         assertEquals("Header\n%start%\nReplacement content\n%end%\nFooter", actual);
     }
 

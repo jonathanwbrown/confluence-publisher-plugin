@@ -25,6 +25,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import com.myyearbook.hudson.plugins.confluence.wiki.generators.MarkupGenerator;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,14 +61,16 @@ public abstract class MarkupEditor implements Describable<MarkupEditor>, Extensi
      * @param isNewFormat
      * @return
      * @throws TokenNotFoundException
+     * @throws IOException 
+     * @throws InterruptedException 
      */
     public final String performReplacement(final AbstractBuild<?, ?> build,
             final BuildListener listener, final String content, boolean isNewFormat, List<RemoteAttachment> remoteAttachments)
-            throws TokenNotFoundException {
+            throws TokenNotFoundException, InterruptedException, IOException {
         final String generated = generator.generateMarkup(build, listener, remoteAttachments);
 
         // Perform the edit
-        return this.performEdits(listener, content, generated, isNewFormat);
+        return this.performEdits(build, listener, content, generated, isNewFormat);
     }
 
     /**
@@ -109,8 +112,8 @@ public abstract class MarkupEditor implements Describable<MarkupEditor>, Extensi
      * @return
      * @throws TokenNotFoundException
      */
-    protected abstract String performEdits(final BuildListener listener, final String content,
-            final String generated, final boolean isNewFormat) throws TokenNotFoundException;
+    protected abstract String performEdits(final AbstractBuild<?, ?> build, final BuildListener listener, final String content,
+            final String generated, final boolean isNewFormat) throws TokenNotFoundException, InterruptedException, IOException;
 
     /**
      * Returns the descriptor for this class

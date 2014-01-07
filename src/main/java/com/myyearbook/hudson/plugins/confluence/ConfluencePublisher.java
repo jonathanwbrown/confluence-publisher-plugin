@@ -33,7 +33,6 @@ import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
-
 import net.sf.json.JSONObject;
 
 import org.apache.commons.lang.StringUtils;
@@ -485,7 +484,7 @@ public class ConfluencePublisher extends Notifier implements Saveable {
 
             try {
                 content = editor.performReplacement(build, listener, content, isNewFormat, remoteAttachments);
-            } catch (TokenNotFoundException e) {
+            } catch (Exception e) {
                 log(listener, "ERROR while performing replacement: " + e.getMessage());
             }
         }
@@ -502,7 +501,7 @@ public class ConfluencePublisher extends Notifier implements Saveable {
     private List<FilePath> findArtifacts(File artifactsDir) {
         ArrayList<FilePath> files = new ArrayList<FilePath>();
 
-        if (artifactsDir != null) {
+        if (artifactsDir != null && artifactsDir.isDirectory()) {
             for (File f : artifactsDir.listFiles()) {
                 if (f.isDirectory()) {
                     files.addAll(findArtifacts(f));
